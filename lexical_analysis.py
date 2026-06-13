@@ -2,8 +2,11 @@ T_LET = "LET"
 T_IDENTIFIER = "IDENTIFIER"
 T_NUMBER = "NUMBER"
 T_ASSIGN = "ASSIGN"
+T_PLUS = "PLUS"
+T_MINUS = "MINUS"
 T_SEMICOLON = "SEMICOLON"
 T_EOF = "EOF"
+
 
 
 class Token:
@@ -97,7 +100,3 @@ class Lexer:
 
       return tokens
     
-lexer = Lexer("let num = 7;")
-tokens = lexer.tokenize()
-
-print(tokens)
