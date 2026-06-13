@@ -106,6 +106,20 @@ class Parser:
             f"Expected NUMBER or IDENTIFIER, got {self.current_token.type}"
         )
     def statement(self):
+        if self.current_token.type == T_IF:
+            return self.parse_if_statement()
+        if self.current_token.type == T_SWITCH:
+            return self.parse_switch_statement()
+        if self.current_token.type == T_BREAK:
+            return self.parse_break_statement()
+        if self.current_token.type == T_CONTINUE:
+            return self.parse_continue_statement()
+        if self.current_token.type == T_WHILE:
+            return self.parse_while_statement()
+        if self.current_token.type == T_DO:
+            return self.parse_do_while_statement()
+        if self.current_token.type == T_FOR:
+            return self.parse_for_statement()
         if self.current_token.type == T_FUNCTION:
             return self.parse_function_declaration()
         if self.match(T_LET):
@@ -276,23 +290,41 @@ class Parser:
         return callee
     
     def member_expression(self):
+
         object = self.primary()
 
-        while self.current_token.type == T_DOT:
+        while self.current_token.type in (
+            T_DOT,
+            T_LBRACKET
+        ):
 
-            self.eat(T_DOT)
+            if self.current_token.type == T_DOT:
 
-            property = IdentifierNode(
-                self.current_token
-            )
+                self.eat(T_DOT)
 
-            self.eat(T_IDENTIFIER)
+                property = IdentifierNode(
+                    self.current_token
+                )
 
-            object = MemberExpressionNode(
-                object,
-                property
-            )
+                self.eat(T_IDENTIFIER)
 
+                object = MemberExpressionNode(
+                    object,
+                    property
+                )
+
+            elif self.current_token.type == T_LBRACKET:
+
+                self.eat(T_LBRACKET)
+
+                property = self.expression()
+
+                self.eat(T_RBRACKET)
+
+                object = ComputedMemberExpressionNode(
+                    object,
+                    property
+                )
         return object
     def binary_operation(self, parse_func, operators):
 
@@ -364,9 +396,36 @@ class Parser:
                 T_OR,
             )
         )
+    def assignment(self):
 
+        left = self.logical_or()
+
+        if self.current_token.type == T_ASSIGN:
+
+            if not isinstance(
+                left,
+                (
+                    IdentifierNode,
+                    MemberExpressionNode,
+                    ComputedMemberExpressionNode
+                )
+            ):
+                raise Exception(
+                    "Invalid assignment target"
+                )
+
+            self.eat(T_ASSIGN)
+
+            right = self.assignment()
+
+            return AssignmentExpressionNode(
+                left,
+                right
+            )
+
+        return left
     def expression(self):
-        return self.logical_or()
+        return self.assignment()
 
     def eat(self, token_type):
         if self.current_token.type == token_type:
@@ -400,7 +459,10 @@ class Parser:
 
         self.eat(T_RETURN)
 
-        value = self.expression()
+        value = None
+
+        if self.current_token.type != T_SEMICOLON:
+            value = self.expression()
 
         self.eat(T_SEMICOLON)
 
@@ -514,6 +576,210 @@ class Parser:
             parameters,
             body
         )
+    
+    def parse_if_statement(self):
+        self.eat(T_IF)
+
+        self.eat(T_LPAREN)
+
+        condition = self.expression()
+
+        self.eat(T_RPAREN)
+
+        consequent = self.block_statement()
+        alternate = None
+
+        if self.current_token.type == T_ELSE:
+            self.eat(T_ELSE)
+
+            if self.current_token.type == T_IF:
+                alternate = self.parse_if_statement()
+            else:
+                alternate = self.block_statement()
+
+        return IfStatementNode(
+            condition,
+            consequent,
+            alternate
+        )
+    def parse_switch_statement(self):
+        self.eat(T_SWITCH)
+
+        self.eat(T_LPAREN)
+
+        discriminant = self.expression()
+
+        self.eat(T_RPAREN)
+
+        self.eat(T_LBRACE)
+
+        cases = []
+
+        while self.current_token.type != T_RBRACE:
+
+            cases.append(
+                self.parse_switch_case()
+            )
+
+        self.eat(T_RBRACE)
+
+        return SwitchStatementNode(
+            discriminant,
+            cases
+        )
+    def parse_switch_case(self):
+        if self.current_token.type == T_CASE:
+
+            self.eat(T_CASE)
+
+            test = self.expression()
+
+        else:
+
+            self.eat(T_DEFAULT)
+
+            test = None
+
+        self.eat(T_COLON)
+
+        consequent = []
+
+        while self.current_token.type not in (
+            T_CASE,
+            T_DEFAULT,
+            T_RBRACE
+        ):
+
+            consequent.append(
+                self.statement()
+            )
+
+        return SwitchCaseNode(
+            test,
+            consequent
+        )
+    def parse_break_statement(self):
+        self.eat(T_BREAK)
+
+        self.eat(T_SEMICOLON)
+
+        return BreakStatementNode()
+    def parse_while_statement(self):
+        self.eat(T_WHILE)
+
+        self.eat(T_LPAREN)
+
+        condition = self.expression()
+
+        self.eat(T_RPAREN)
+
+        body = self.block_statement()
+
+        return WhileStatementNode(
+            condition,
+            body
+        )
+    def parse_do_while_statement(self):
+        self.eat(T_DO)
+
+        body = self.block_statement()
+
+        self.eat(T_WHILE)
+
+        self.eat(T_LPAREN)
+
+        condition = self.expression()
+
+        self.eat(T_RPAREN)
+
+        self.eat(T_SEMICOLON)
+
+        return DoWhileStatementNode(
+            body,
+            condition
+        )
+    def parse_for_statement(self):
+        self.eat(T_FOR)
+
+        self.eat(T_LPAREN)
+
+        # ----------------
+        # Initializer
+        # ----------------
+        initializer = None
+
+        if self.current_token.type != T_SEMICOLON:
+
+            if self.current_token.type in (
+                T_LET,
+                T_CONST
+            ):
+                initializer = self.parse_for_initializer()
+            else:
+                initializer = self.expression()
+
+        self.eat(T_SEMICOLON)
+        # ----------------
+        # Condition
+        # ----------------
+
+        condition = None
+
+        if self.current_token.type != T_SEMICOLON:
+            condition = self.expression()
+
+        self.eat(T_SEMICOLON)
+
+        # ----------------
+        # Update
+        # ----------------
+
+        update = None
+
+        if self.current_token.type != T_RPAREN:
+            update = self.expression()
+
+        self.eat(T_RPAREN)
+
+        body = self.block_statement()
+
+        return ForStatementNode(
+            initializer,
+            condition,
+            update,
+            body
+        )
+    def parse_for_initializer(self):
+
+        kind = self.current_token.type
+
+        if kind == T_LET:
+            self.eat(T_LET)
+        else:
+            self.eat(T_CONST)
+
+        identifier = IdentifierNode(
+            self.current_token
+        )
+
+        self.eat(T_IDENTIFIER)
+
+        self.eat(T_ASSIGN)
+
+        value = self.expression()
+
+        return VariableDeclarationNode(
+            identifier,
+            value
+        )
+    def parse_continue_statement(self):
+
+        self.eat(T_CONTINUE)
+
+        self.eat(T_SEMICOLON)
+
+        return ContinueStatementNode()
+    
     def object_expression(self):
         properties = []
 

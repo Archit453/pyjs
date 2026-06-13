@@ -181,3 +181,120 @@ class ArrowFunctionNode:
             f"{self.parameters}, "
             f"{self.body})"
         )
+    
+class IfStatementNode:
+    def __init__(self, condition, consequent, alternate=None):
+        self.condition = condition
+        self.consequent = consequent
+        self.alternate = alternate
+
+    def __repr__(self):
+        return (
+            f"IfStatementNode("
+            f"{self.condition}, "
+            f"{self.consequent}, "
+            f"{self.alternate})"
+        )
+    
+class SwitchStatementNode:
+    def __init__(self, discriminant, cases):
+        self.discriminant = discriminant
+        self.cases = cases
+
+    def __repr__(self):
+        return (
+            f"SwitchStatementNode("
+            f"{self.discriminant}, "
+            f"{self.cases})"
+        )
+class SwitchCaseNode:
+    def __init__(self, test, consequent):
+        self.test = test
+        self.consequent = consequent
+
+    def __repr__(self):
+        return (
+            f"SwitchCaseNode("
+            f"{self.test}, "
+            f"{self.consequent})"
+        )
+    
+class BreakStatementNode:
+    def __repr__(self):
+        return "BreakStatementNode()"
+    
+class ContinueStatementNode:
+    def __repr__(self):
+        return "ContinueStatementNode()"
+    
+class WhileStatementNode:
+    def __init__(self, condition, body):
+        self.condition = condition
+        self.body = body
+
+    def __repr__(self):
+        return (
+            f"WhileStatementNode("
+            f"{self.condition}, "
+            f"{self.body})"
+        )
+    
+class DoWhileStatementNode:
+    def __init__(self, body, condition):
+        self.body = body
+        self.condition = condition
+
+    def __repr__(self):
+        return (
+            f"DoWhileStatementNode("
+            f"{self.body}, "
+            f"{self.condition})"
+        )
+    
+class AssignmentExpressionNode:
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def __repr__(self):
+        return (
+            f"AssignmentExpressionNode("
+            f"{self.left}, "
+            f"{self.right})"
+        )
+    
+class ForStatementNode:
+    def __init__(
+        self,
+        initializer,
+        condition,
+        update,
+        body
+    ):
+        self.initializer = initializer
+        self.condition = condition
+        self.update = update
+        self.body = body
+
+    def __repr__(self):
+        return (
+            f"ForStatementNode("
+            f"{self.initializer}, "
+            f"{self.condition}, "
+            f"{self.update}, "
+            f"{self.body})"
+        )
+    
+class ComputedMemberExpressionNode:
+    def __init__(self, object, property):
+        self.object = object
+        self.property = property
+
+    def __repr__(self):
+        return (
+            f"ComputedMemberExpressionNode("
+            f"{self.object}, "
+            f"{self.property})"
+        )
+    
+    

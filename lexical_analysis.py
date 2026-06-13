@@ -110,6 +110,7 @@ T_SWITCH = "SWITCH"
 T_CASE = "CASE"
 T_DEFAULT = "DEFAULT"
 T_BREAK = "BREAK"
+T_CONTINUE = "CONTINUE"
 
 # =========================
 # SPECIAL
@@ -146,6 +147,7 @@ KEYWORDS = {
     "case": T_CASE,
     "default": T_DEFAULT,
     "break": T_BREAK,
+    "continue": T_CONTINUE,
 }
 
 class Token:
@@ -567,7 +569,7 @@ class Lexer:
 
       return tokens
     
-lexer = Lexer("let arr = [...nums]")
+lexer = Lexer("continue;")
 
 for token in lexer.tokenize():
     print(token)

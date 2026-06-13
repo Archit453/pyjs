@@ -3,9 +3,26 @@ from parser import Parser
 
 lexer = Lexer(
  '''
-(a,b)=>{
-    return a+b;
-};
+function test(a,b){
+
+    if(a > b){
+        return a;
+    }
+
+    while(a < 100){
+        a = a + 1;
+
+        if(a == 50){
+            continue;
+        }
+
+        if(a == 75){
+            break;
+        }
+    }
+
+    return a;
+}
 ''')
 
 parser = Parser(lexer)
