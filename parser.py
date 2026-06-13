@@ -1,20 +1,6 @@
 from lexical_analysis import *
 from ast_nodes import *
 
-class UnaryExpressionNode:
-    def __init__(self, operator, operand):
-        self.operator = operator
-        self.operand = operand
-
-    def __repr__(self):
-        return f"({self.operator.value}{self.operand})"
-    
-class SpreadElementNode:
-    def __init__(self, argument):
-        self.argument = argument
-
-    def __repr__(self):
-        return f"SpreadElementNode({self.argument})"
 
 class Parser:
     def __init__(self, lexer):
@@ -27,8 +13,6 @@ class Parser:
 
         if self.index < len(self.tokens):
             self.current_token = self.tokens[self.index]
-        else:
-            self.current_token = None
     
     def peek(self, offset=1):
         position = self.index + offset
@@ -99,10 +83,18 @@ class Parser:
         if self.current_token.type == T_FUNCTION:
             return self.function_expression()
         
+        if (
+            self.match(T_IDENTIFIER)
+            and self.check(1, T_ARROW)
+        ):
+            return self.arrow_function_single()
+        
         if self.current_token.type == T_IDENTIFIER:
             node = IdentifierNode(self.current_token)
             self.eat(T_IDENTIFIER)
             return node
+        if self.is_arrow_function():
+            return self.arrow_function_multiple()
         
         if self.current_token.type == T_LPAREN:
             self.eat(T_LPAREN)
@@ -139,7 +131,55 @@ class Parser:
             )
 
         return statements
+    def is_arrow_function(self):
 
+        if not self.match(T_LPAREN):
+            return False
+
+        offset = 1
+        expect_identifier = True
+
+        while True:
+
+            token = self.peek(offset)
+
+            if token is None:
+                return False
+
+            if expect_identifier:
+
+                if token.type == T_RPAREN:
+
+                    next_token = self.peek(offset + 1)
+
+                    return (
+                        next_token is not None
+                        and next_token.type == T_ARROW
+                    )
+
+                if token.type != T_IDENTIFIER:
+                    return False
+
+                expect_identifier = False
+
+            else:
+
+                if token.type == T_COMMA:
+                    expect_identifier = True
+
+                elif token.type == T_RPAREN:
+
+                    next_token = self.peek(offset + 1)
+
+                    return (
+                        next_token is not None
+                        and next_token.type == T_ARROW
+                    )
+
+                else:
+                    return False
+
+            offset += 1
     def block_statement(self):
         body = []
 
@@ -417,6 +457,63 @@ class Parser:
 
         return ArrayNode(elements)
     
+    def arrow_function_single(self):
+
+        parameter = IdentifierNode(
+            self.current_token
+        )
+
+        self.eat(T_IDENTIFIER)
+
+        self.eat(T_ARROW)
+
+        if self.current_token.type == T_LBRACE:
+            body = self.block_statement()
+        else:
+            body = self.expression()
+
+        return ArrowFunctionNode(
+            [parameter],
+            body
+        )
+
+    def arrow_function_multiple(self):
+
+        parameters = []
+
+        self.eat(T_LPAREN)
+
+        if self.current_token.type != T_RPAREN:
+
+            parameters.append(
+                IdentifierNode(self.current_token)
+            )
+
+            self.eat(T_IDENTIFIER)
+
+            while self.current_token.type == T_COMMA:
+
+                self.eat(T_COMMA)
+
+                parameters.append(
+                    IdentifierNode(self.current_token)
+                )
+
+                self.eat(T_IDENTIFIER)
+
+        self.eat(T_RPAREN)
+
+        self.eat(T_ARROW)
+
+        if self.current_token.type == T_LBRACE:
+            body = self.block_statement()
+        else:
+            body = self.expression()
+
+        return ArrowFunctionNode(
+            parameters,
+            body
+        )
     def object_expression(self):
         properties = []
 

@@ -3,7 +3,9 @@ from parser import Parser
 
 lexer = Lexer(
  '''
-add(1,2);
+(a,b)=>{
+    return a+b;
+};
 ''')
 
 parser = Parser(lexer)

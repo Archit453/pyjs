@@ -31,6 +31,21 @@ class BinaryExpressionNode:
     def __repr__(self):
         return f"({self.left} {self.operator.value} {self.right})"
     
+class UnaryExpressionNode:
+    def __init__(self, operator, operand):
+        self.operator = operator
+        self.operand = operand
+
+    def __repr__(self):
+        return f"({self.operator.value}{self.operand})"
+    
+class SpreadElementNode:
+    def __init__(self, argument):
+        self.argument = argument
+
+    def __repr__(self):
+        return f"SpreadElementNode({self.argument})"
+    
 class ArrayNode:
     def __init__(self, elements):
         self.elements = elements
