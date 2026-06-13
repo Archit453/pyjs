@@ -18,12 +18,40 @@ class SpreadElementNode:
 
 class Parser:
     def __init__(self, lexer):
-        self.lexer = lexer
-        self.current_token = self.lexer.get_next_token()
+        self.tokens = lexer.tokenize()
+        self.index = 0
+        self.current_token = self.tokens[self.index]
 
     def advance(self):
-        self.current_token = self.lexer.get_next_token()
-        
+        self.index += 1
+
+        if self.index < len(self.tokens):
+            self.current_token = self.tokens[self.index]
+        else:
+            self.current_token = None
+    
+    def peek(self, offset=1):
+        position = self.index + offset
+
+        if position < len(self.tokens):
+            return self.tokens[position]
+
+        return None
+            
+    def match(self, token_type):
+        return (
+            self.current_token is not None
+            and self.current_token.type == token_type
+        )
+    
+    def check(self, offset, token_type):
+        token = self.peek(offset)
+
+        return (
+            token is not None
+            and token.type == token_type
+        )
+    
     def primary(self):
 
         if self.current_token.type in (
@@ -68,6 +96,9 @@ class Parser:
             self.eat(T_UNDEFINED)
             return UndefinedNode()
         
+        if self.current_token.type == T_FUNCTION:
+            return self.function_expression()
+        
         if self.current_token.type == T_IDENTIFIER:
             node = IdentifierNode(self.current_token)
             self.eat(T_IDENTIFIER)
@@ -83,8 +114,9 @@ class Parser:
             f"Expected NUMBER or IDENTIFIER, got {self.current_token.type}"
         )
     def statement(self):
-
-        if self.current_token.type == T_LET:
+        if self.current_token.type == T_FUNCTION:
+            return self.parse_function_declaration()
+        if self.match(T_LET):
             return self.parse_variable_declaration()
 
         if self.current_token.type == T_RETURN:
@@ -108,6 +140,63 @@ class Parser:
 
         return statements
 
+    def block_statement(self):
+        body = []
+
+        self.eat(T_LBRACE)
+
+        while self.current_token.type != T_RBRACE:
+
+            body.append(
+                self.statement()
+            )
+
+        self.eat(T_RBRACE)
+
+        return BlockStatementNode(body)
+
+    def function_parameters(self):
+        parameters = []
+
+        self.eat(T_LPAREN)
+
+        if self.current_token.type != T_RPAREN:
+
+            parameters.append(
+                IdentifierNode(
+                    self.current_token
+                )
+            )
+
+            self.eat(T_IDENTIFIER)
+
+            while self.current_token.type == T_COMMA:
+
+                self.eat(T_COMMA)
+
+                parameters.append(
+                    IdentifierNode(
+                        self.current_token
+                    )
+                )
+
+                self.eat(T_IDENTIFIER)
+
+        self.eat(T_RPAREN)
+
+        return parameters
+    def function_expression(self):
+
+        self.eat(T_FUNCTION)
+
+        parameters = self.function_parameters()
+
+        body = self.block_statement()
+
+        return FunctionExpressionNode(
+            parameters,
+            body
+        )
     def arguments(self):
         arguments = []
 
@@ -287,7 +376,24 @@ class Parser:
             )
 
         return self.expression()
-    
+    def parse_function_declaration(self):
+        self.eat(T_FUNCTION)
+
+        name = IdentifierNode(
+            self.current_token
+        )
+
+        self.eat(T_IDENTIFIER)
+
+        parameters = self.function_parameters()
+
+        body = self.block_statement()
+
+        return FunctionDeclarationNode(
+            name,
+            parameters,
+            body
+        )
     def array_expression(self):
         elements = []
 

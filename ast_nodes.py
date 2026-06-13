@@ -122,3 +122,47 @@ class ProgramNode:
 
     def __repr__(self):
         return f"ProgramNode({self.body})"
+    
+class BlockStatementNode:
+    def __init__(self, body):
+        self.body = body
+
+    def __repr__(self):
+        return f"BlockStatementNode({self.body})"
+    
+class FunctionDeclarationNode:
+    def __init__(self, name, parameters, body):
+        self.name = name
+        self.parameters = parameters
+        self.body = body
+
+    def __repr__(self):
+        return (
+            f"FunctionDeclarationNode("
+            f"{self.name}, "
+            f"{self.parameters}, "
+            f"{self.body})"
+        )
+class FunctionExpressionNode:
+    def __init__(self, parameters, body):
+        self.parameters = parameters
+        self.body = body
+
+    def __repr__(self):
+        return (
+            f"FunctionExpressionNode("
+            f"{self.parameters}, "
+            f"{self.body})"
+        )
+    
+class ArrowFunctionNode:
+    def __init__(self, parameters, body):
+        self.parameters = parameters
+        self.body = body
+
+    def __repr__(self):
+        return (
+            f"ArrowFunctionNode("
+            f"{self.parameters}, "
+            f"{self.body})"
+        )

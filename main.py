@@ -3,9 +3,7 @@ from parser import Parser
 
 lexer = Lexer(
  '''
-let x = 5;
-let y = 10;
-return x;
+add(1,2);
 ''')
 
 parser = Parser(lexer)
