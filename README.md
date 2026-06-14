@@ -28,5 +28,6 @@ python -m pyjs examples/palindrome_check.pyjs
 
 > Note: run `python -m pyjs` from the repository root so the `pyjs` package is
 > discoverable on `sys.path`.
+<img width="1919" height="1010" alt="image" src="https://github.com/user-attachments/assets/cf861ac4-33c9-41da-8516-cb932ce8ecde" />
 
 
